@@ -1,0 +1,570 @@
+{% extends "library/base.html" %}
+{% load static %}
+{% block title %}借阅管理 - 古韵书斋{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    body {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        min-height: 100vh;
+    }
+    
+    .admin-container {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 3px solid #d4af37;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px auto;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        opacity: 0.3;
+        z-index: 0;
+        animation: gentle-rotate 30s linear infinite;
+    }
+    
+    @keyframes gentle-rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .admin-header {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #d4af37;
+        padding-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+    }
+    
+    .filter-section {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .filter-row {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .filter-select, .search-input {
+        padding: 8px 12px;
+        border: 2px solid #d4af37;
+        border-radius: 6px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: #fdfcf8;
+        color: #654321;
+    }
+    
+    .filter-select:focus, .search-input:focus {
+        outline: none;
+        border-color: #b8860b;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    
+    .admin-btn {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        border: 2px solid #8b4513;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+        color: #654321;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+    
+    .borrowings-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'ZCOOL XiaoWei', serif;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .borrowings-table th {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        padding: 10px 8px;
+        text-align: center;
+        border: 1px solid #d4af37;
+        font-weight: bold;
+    }
+    
+    .borrowings-table td {
+        padding: 10px 8px;
+        text-align: center;
+        border: 1px solid #d4af37;
+        background: rgba(255, 255, 255, 0.5);
+        vertical-align: middle;
+    }
+    
+    .borrowings-table tr:nth-child(even) td {
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .reader-info {
+        text-align: left;
+    }
+    
+    .reader-name {
+        font-weight: bold;
+        color: #8b4513;
+    }
+    
+    .reader-details {
+        font-size: 0.8rem;
+        color: #8b4513;
+    }
+    
+    .book-info {
+        text-align: left;
+        max-width: 200px;
+    }
+    
+    .book-title {
+        font-weight: bold;
+        color: #8b4513;
+        margin-bottom: 3px;
+    }
+    
+    .book-author {
+        font-size: 0.8rem;
+        color: #8b4513;
+    }
+    
+    .book-isbn {
+        font-size: 0.75rem;
+        color: #8b4513;
+        opacity: 0.8;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: white;
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .status-returned {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    
+    .status-overdue {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    .date-info {
+        font-size: 0.85rem;
+    }
+    
+    .date-issued {
+        color: #8b4513;
+        margin-bottom: 3px;
+    }
+    
+    .date-due {
+        color: #8b4513;
+    }
+    
+    .date-overdue {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .renewal-info {
+        font-size: 0.8rem;
+        color: #8b4513;
+    }
+    
+    .renewal-count {
+        font-weight: bold;
+        color: #b8860b;
+    }
+    
+    .charge-info {
+        font-size: 0.8rem;
+    }
+    
+    .charge-yes {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .charge-no {
+        color: #28a745;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .pagination a {
+        padding: 8px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 5px;
+        color: #8b4513;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: rgba(255, 255, 255, 0.8);
+    }
+    
+    .pagination a:hover {
+        background: #d4af37;
+        color: #654321;
+    }
+    
+    .pagination .current {
+        background: #d4af37;
+        color: #654321;
+        padding: 8px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 5px;
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+    
+    .page-jump {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .jump-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #8b4513;
+        font-weight: bold;
+    }
+    
+    .jump-input {
+        width: 60px;
+        padding: 5px 8px;
+        border: 2px solid #d4af37;
+        border-radius: 4px;
+        text-align: center;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: #fdfcf8;
+        color: #654321;
+    }
+    
+    .jump-input:focus {
+        outline: none;
+        border-color: #b8860b;
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    }
+    
+    .jump-btn {
+        padding: 5px 12px;
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        border: 2px solid #d4af37;
+        border-radius: 4px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .jump-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #996515 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
+    }
+    
+    .stats-row {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 12px;
+        padding: 15px 20px;
+        text-align: center;
+        min-width: 120px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #8b4513;
+        font-family: 'Ma Shan Zheng', cursive;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #8b4513;
+        margin-top: 5px;
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-container">
+        <div class="admin-header">
+            <span>📖 借阅管理</span>
+            <a href="/admin-dashboard/" class="admin-btn">📊 返回仪表板</a>
+        </div>
+        
+        <!-- 筛选和搜索区域 -->
+        <div class="filter-section">
+            <form method="GET" class="filter-row">
+                <div class="filter-group">
+                    <label>状态筛选：</label>
+                    <select name="status" class="filter-select">
+                        <option value="all" {% if status == 'all' %}selected{% endif %}>全部</option>
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>借阅中</option>
+                        <option value="returned" {% if status == 'returned' %}selected{% endif %}>已归还</option>
+                        <option value="overdue" {% if status == 'overdue' %}selected{% endif %}>逾期</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>搜索：</label>
+                    <input type="text" name="search" class="search-input" 
+                           placeholder="读者姓名、图书标题..." 
+                           value="{{ search_query }}">
+                </div>
+                
+                <button type="submit" class="admin-btn">🔍 筛选</button>
+                <a href="/admin-borrowings/" class="admin-btn">🔄 重置</a>
+            </form>
+        </div>
+        
+        <!-- 统计信息 -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-number">{{ borrowings.paginator.count }}</div>
+                <div class="stat-label">总记录数</div>
+            </div>
+        </div>
+        
+        <!-- 借阅记录列表 -->
+        {% if borrowings %}
+        <table class="borrowings-table">
+            <thead>
+                <tr>
+                    <th>读者信息</th>
+                    <th>图书信息</th>
+                    <th>借出日期</th>
+                    <th>应还日期</th>
+                    <th>实际归还</th>
+                    <th>续借次数</th>
+                    <th>逾期扣费</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for borrowing in borrowings %}
+                <tr>
+                    <td>
+                        <div class="reader-info">
+                            <div class="reader-name">{{ borrowing.reader.name }}</div>
+                            <div class="reader-details">
+                                用户名: {{ borrowing.reader.user.username }}<br>
+                                余额: ¥{{ borrowing.reader.balance|floatformat:2 }}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="book-info">
+                            <div class="book-title">{{ borrowing.ISBN.title }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            <div class="date-issued">{{ borrowing.date_issued|date:"Y-m-d" }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-info">
+                            {% if borrowing.date_due_to_returned < today and not borrowing.is_return %}
+                            <div class="date-due date-overdue">{{ borrowing.date_due_to_returned|date:"Y-m-d" }}</div>
+                            <div style="font-size: 0.7rem; color: #dc3545;">已逾期</div>
+                            {% else %}
+                            <div class="date-due">{{ borrowing.date_due_to_returned|date:"Y-m-d" }}</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if borrowing.is_return %}
+                        <div class="date-info">
+                            <div class="date-issued">{{ borrowing.date_returned|date:"Y-m-d" }}</div>
+                        </div>
+                        {% else %}
+                        <span style="color: #6c757d;">--</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="renewal-info">
+                            <span class="renewal-count">{{ borrowing.renewal_count }}</span> 次
+                        </div>
+                    </td>
+                    <td>
+                        <div class="charge-info">
+                            {% if borrowing.is_overdue_charged %}
+                            <div class="charge-yes">已扣费</div>
+                            <div style="font-size: 0.7rem;">¥{{ borrowing.overdue_amount|floatformat:2 }}</div>
+                            {% else %}
+                            <div class="charge-no">正常</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if borrowing.is_return %}
+                        <span class="status-badge status-returned">已归还</span>
+                        {% elif borrowing.date_due_to_returned < today %}
+                        <span class="status-badge status-overdue">逾期</span>
+                        {% else %}
+                        <span class="status-badge status-active">借阅中</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- 分页 -->
+        {% if borrowings.has_other_pages %}
+        <div class="pagination">
+            {% if borrowings.has_previous %}
+            <a href="?page=1{% if status != 'all' %}&status={{ status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; 首页</a>
+            <a href="?page={{ borrowings.previous_page_number }}{% if status != 'all' %}&status={{ status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">上一页</a>
+            {% endif %}
+            
+            <span class="current">第 {{ borrowings.number }} 页，共 {{ borrowings.paginator.num_pages }} 页</span>
+            
+            {% if borrowings.has_next %}
+            <a href="?page={{ borrowings.next_page_number }}{% if status != 'all' %}&status={{ status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">下一页</a>
+            <a href="?page={{ borrowings.paginator.num_pages }}{% if status != 'all' %}&status={{ status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">末页 &raquo;</a>
+            {% endif %}
+        </div>
+        
+        <!-- 页码跳转 -->
+        <div class="page-jump">
+            <form method="get" class="jump-form" onsubmit="return validatePageJump()">
+                {% if status != 'all' %}
+                <input type="hidden" name="status" value="{{ status }}">
+                {% endif %}
+                {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+                {% endif %}
+                <span>跳转到第</span>
+                <input type="number" name="page" id="jump-page" min="1" max="{{ borrowings.paginator.num_pages }}" 
+                       placeholder="页码" class="jump-input">
+                <span>页</span>
+                <button type="submit" class="jump-btn">跳转</button>
+            </form>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div style="text-align: center; color: #6c757d; padding: 40px;">
+            {% if search_query %}
+            <p>😔 没有找到匹配"{{ search_query }}"的借阅记录</p>
+            {% elif status != 'all' %}
+            <p>📖 当前筛选条件下没有借阅记录</p>
+            {% else %}
+            <p>📖 还没有任何借阅记录</p>
+            {% endif %}
+            <a href="/admin-borrowings/" class="admin-btn">查看所有记录</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function validatePageJump() {
+    const pageInput = document.getElementById('jump-page');
+    const pageValue = parseInt(pageInput.value);
+    const maxPages = {{ borrowings.paginator.num_pages }};
+    
+    if (!pageValue || pageValue < 1 || pageValue > maxPages) {
+        alert('请输入有效的页码（1-' + maxPages + '）');
+        pageInput.focus();
+        return false;
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}

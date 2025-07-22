@@ -1,0 +1,339 @@
+{% extends 'library/base.html' %}
+{% load static %}
+
+{% block title %}注册验证 - 古韵书斋{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    body {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        min-height: 100vh;
+    }
+    
+    .ancient-container {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 3px solid #d4af37;
+        border-radius: 20px;
+        padding: 40px;
+        margin: 50px auto;
+        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ancient-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        opacity: 0.3;
+        z-index: 0;
+        animation: gentle-rotate 30s linear infinite;
+    }
+    
+    @keyframes gentle-rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .form-title {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+        font-size: 2rem;
+        text-align: center;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-title::before, .form-title::after {
+        content: "◆";
+        color: #d4af37;
+        font-size: 1rem;
+        margin: 0 15px;
+    }
+    
+    .form-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #8b4513;
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 10px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.8);
+        color: #654321;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #8b4513;
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        background: white;
+    }
+    
+    .verification-code-input {
+        text-align: center;
+        font-size: 24px;
+        letter-spacing: 8px;
+        font-weight: bold;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        border: 2px solid #8b4513;
+        color: #654321;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 12px 30px;
+        border-radius: 10px;
+        width: 100%;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        border: 2px solid #d4af37;
+        color: #8b4513;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        font-size: 14px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(212, 175, 55, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    .alert {
+        border-radius: 10px;
+        border: 2px solid;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+        border-color: #28a745;
+        color: #155724;
+    }
+    
+    .alert-danger {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+        border-color: #dc3545;
+        color: #721c24;
+    }
+    
+    .alert-warning {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+        border-color: #ffc107;
+        color: #856404;
+    }
+    
+    .email-info {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 2px solid #d4af37;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #8b4513;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .countdown {
+        font-weight: bold;
+        font-size: 18px;
+        color: #b8860b;
+        margin-top: 10px;
+    }
+    
+    .help-text {
+        font-size: 14px;
+        color: #8b7355;
+        text-align: center;
+        margin-top: 15px;
+        line-height: 1.5;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .icon {
+        font-size: 48px;
+        color: #d4af37;
+        margin-bottom: 20px;
+        text-align: center;
+        display: block;
+    }
+</style>
+
+<script>
+let countdownTimer;
+let remainingTime = {{ remaining_time|default:0 }};
+
+function updateCountdown() {
+    if (remainingTime <= 0) {
+        document.getElementById('countdown').innerHTML = '验证码已过期';
+        document.getElementById('verifyBtn').disabled = true;
+        clearInterval(countdownTimer);
+        return;
+    }
+    
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    document.getElementById('countdown').innerHTML = `验证码有效期还剩：${minutes}:${seconds.toString().padStart(2, '0')}`;
+    remainingTime--;
+}
+
+function startCountdown() {
+    if (remainingTime > 0) {
+        updateCountdown();
+        countdownTimer = setInterval(updateCountdown, 1000);
+    }
+}
+
+// 页面加载时启动倒计时
+document.addEventListener('DOMContentLoaded', function() {
+    startCountdown();
+    
+    // 验证码输入框自动聚焦
+    const codeInput = document.getElementById('verification_code');
+    if (codeInput) {
+        codeInput.focus();
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="ancient-container">
+        <h1 class="form-title">邮箱验证</h1>
+        
+        <div class="form-content">
+            {% if state == 'success' %}
+                <div class="alert alert-success">
+                    <div class="icon">✨</div>
+                    <h4 style="text-align: center; margin-bottom: 15px;">注册成功！</h4>
+                    <p style="text-align: center;">
+                        欢迎加入古韵书斋！您的账户已成功创建，现在可以开始您的阅读之旅了。
+                    </p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="/" class="btn-secondary">进入首页</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="email-info">
+                    <div class="icon">📧</div>
+                    <p><strong>验证邮件已发送至：</strong></p>
+                    <p style="font-size: 18px; color: #d4af37; font-weight: bold;">{{ email }}</p>
+                    <div class="countdown" id="countdown"></div>
+                </div>
+                
+                {% if state %}
+                    <div class="alert 
+                        {% if state == 'code_expired' or state == 'session_expired' %}alert-warning
+                        {% else %}alert-danger{% endif %}">
+                        {% if state == 'empty_code' %}
+                            请输入验证码
+                        {% elif state == 'invalid_code' %}
+                            验证码错误，请重新输入
+                        {% elif state == 'code_expired' %}
+                            验证码已过期，请重新注册
+                        {% elif state == 'session_expired' %}
+                            注册会话已过期，请重新注册
+                        {% elif state == 'username_taken_during_verification' %}
+                            用户名在验证过程中被占用，请重新注册
+                        {% elif state == 'registration_failed' %}
+                            注册失败，请重试
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                {% if state != 'code_expired' and state != 'session_expired' %}
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="verification_code" class="form-label">请输入验证码：</label>
+                            <input type="text" 
+                                   id="verification_code" 
+                                   name="verification_code" 
+                                   class="form-control verification-code-input" 
+                                   maxlength="4" 
+                                   placeholder="请输入4位验证码"
+                                   autocomplete="off">
+                        </div>
+                        
+                        <button type="submit" id="verifyBtn" class="btn-primary">
+                            验证并完成注册
+                        </button>
+                    </form>
+                    
+                    <div class="help-text">
+                        <p>📋 <strong>温馨提示：</strong></p>
+                        <p>• 验证码有效期为3分钟</p>
+                        <p>• 请检查邮箱的垃圾邮件文件夹</p>
+                        <p>• 如未收到邮件，请重新注册</p>
+                    </div>
+                {% endif %}
+                
+                <div class="back-link">
+                    <a href="/register/" class="btn-secondary">← 重新注册</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

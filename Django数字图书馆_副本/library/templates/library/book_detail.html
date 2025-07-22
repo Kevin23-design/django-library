@@ -1,0 +1,665 @@
+{% extends "library/base.html" %}
+{% load static %}
+
+{% block title %}{{ book.title }} - 图书详情{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    .book-detail-container {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 3px solid #d4af37;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        margin-top: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .book-detail-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="%23d4af37" opacity="0.05"><circle cx="20" cy="20" r="2"/><circle cx="80" cy="20" r="2"/><circle cx="50" cy="50" r="3"/><circle cx="20" cy="80" r="2"/><circle cx="80" cy="80" r="2"/></g></svg>');
+        animation: detailFloat 30s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    @keyframes detailFloat {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(180deg); }
+    }
+    
+    .book-cover {
+        max-height: 400px;
+        width: auto;
+        border-radius: 12px;
+        border: 3px solid #d4af37;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .book-cover:hover {
+        transform: scale(1.02) rotate(1deg);
+        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.6);
+    }
+    
+    /* 左右对齐的详情布局 */
+    .book-detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 30px;
+    }
+    
+    .book-left-section {
+        flex: 0 0 350px;
+        text-align: center;
+    }
+    
+    .book-right-section {
+        flex: 1;
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
+    .book-title {
+        color: #8b4513;
+        font-family: 'Ma Shan Zheng', cursive;
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+        line-height: 1.3;
+    }
+    
+    .book-subtitle {
+        color: #b8860b;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-size: 1.2rem;
+        margin-bottom: 25px;
+        font-style: italic;
+    }
+    
+    .book-meta {
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+    }
+    
+    .book-meta .row {
+        margin-bottom: 12px;
+        align-items: center;
+        min-height: 30px;
+    }
+    
+    .book-meta .row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .book-meta dt {
+        font-weight: 700;
+        color: #8b4513;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-size: 1rem;
+        text-align: right;
+        padding-right: 15px;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: 30px;
+    }
+    
+    .book-meta dd {
+        color: #654321;
+        font-family: 'ZCOOL XiaoWei', serif;
+        line-height: 1.6;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        min-height: 30px;
+        padding-left: 15px;
+        border-left: 2px solid #d4af37;
+    }
+    
+    .action-btn {
+        min-width: 150px;
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+        border: 2px solid #d4af37 !important;
+        color: #654321 !important;
+        font-family: 'ZCOOL XiaoWei', serif !important;
+        font-weight: 700 !important;
+        border-radius: 15px !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3) !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+    }
+    
+    .action-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #996515 100%) !important;
+        border-color: #b8860b !important;
+        color: #654321 !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5) !important;
+    }
+    
+    .action-btn.disabled {
+        background: linear-gradient(135deg, #cccccc 0%, #999999 100%) !important;
+        border-color: #cccccc !important;
+        color: #666666 !important;
+        opacity: 0.6 !important;
+    }
+    
+    .alert-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        min-width: 300px;
+    }
+    
+    .description-content {
+        line-height: 1.8;
+        text-align: justify;
+        color: #654321;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+    }
+    
+    .subject-badge {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+        color: #654321 !important;
+        border: 1px solid #d4af37 !important;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        padding: 5px 12px !important;
+        border-radius: 12px !important;
+        font-family: 'ZCOOL XiaoWei', serif !important;
+        font-weight: 600 !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    .card {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%) !important;
+        border: 2px solid #d4af37 !important;
+        border-radius: 15px !important;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2) !important;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+        border-bottom: 2px solid #d4af37 !important;
+        border-radius: 13px 13px 0 0 !important;
+    }
+    
+    .card-header h5 {
+        color: #654321 !important;
+        font-family: 'Ma Shan Zheng', cursive !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3) !important;
+        margin: 0 !important;
+    }
+    
+    .card-body {
+        color: #654321 !important;
+        font-family: 'ZCOOL XiaoWei', serif !important;
+        line-height: 1.6 !important;
+    }
+    
+    .card-body strong {
+        color: #8b4513 !important;
+    }
+    
+    .section-title {
+        color: #8b4513;
+        font-family: 'Ma Shan Zheng', cursive;
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        position: relative;
+        padding-left: 25px;
+    }
+    
+    .section-title::before {
+        content: "◆";
+        position: absolute;
+        left: 0;
+        color: #d4af37;
+        font-size: 1rem;
+    }
+    
+    .badge-success {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+        color: white !important;
+    }
+    
+    .badge-danger {
+        background: linear-gradient(135deg, #f44336 0%, #da190b 100%) !important;
+        color: white !important;
+    }
+    
+    .badge-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%) !important;
+        color: white !important;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .book-detail-row {
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .book-left-section {
+            flex: none;
+            width: 100%;
+        }
+        
+        .book-right-section {
+            min-height: auto;
+        }
+        
+        .book-meta .row {
+            margin-bottom: 15px;
+        }
+        
+        .book-meta dt {
+            text-align: left;
+            padding-right: 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #d4af37;
+            margin-bottom: 5px;
+        }
+        
+        .book-meta dd {
+            padding-left: 0;
+            border-left: none;
+            border-top: 1px solid #d4af37;
+            padding-top: 5px;
+        }
+        
+        .book-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 状态提示消息 -->
+    {% if state %}
+    <div class="alert-message">
+        <div class="alert alert-dismissible {% if state == 'success' %}alert-success{% else %}alert-warning{% endif %}">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {% if state == 'no_user' %}
+                <h5><i class="fa fa-exclamation-circle"></i> 请先登录</h5>
+                <p>您需要登录后才能借阅图书</p>
+                <a href="{% url 'user_login' %}" class="btn btn-sm btn-outline-secondary">去登录</a>
+            {% elif state == 'upper_limit' %}
+                <h5><i class="fa fa-exclamation-triangle"></i> 借书数量已达上限</h5>
+                <p>您当前的借书数量已达到系统限制</p>
+            {% elif state == 'negative_balance' %}
+                <h5><i class="fa fa-exclamation-triangle"></i> 账户余额不足</h5>
+                <p>您的账户余额为负数，可能因逾期图书被扣费。请先充值后再借书。</p>
+                <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">去充值</a>
+            {% elif state == 'success' %}
+                <h5><i class="fa fa-check-circle"></i> 借阅成功</h5>
+                <p>请按时归还图书</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 图书不可用提示 -->
+    {% if book.available_copies == 0 %}
+    <div class="alert-message">
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <h5><i class="fa fa-info-circle"></i> 图书暂不可借</h5>
+            <p>此书当前已全部借出</p>
+            <a href="{% url 'book_search' %}" class="btn btn-sm btn-outline-secondary">查找其他图书</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 图书详情主体 -->
+    <div class="book-detail-container">
+        <div class="book-detail-row">
+            <!-- 左侧：图书封面和馆藏信息 -->
+            <div class="book-left-section">
+                <div class="mb-4">
+                    <img src="{% if book.image %}{{ book.image.url }}{% else %}{% static 'images/default-book.png' %}{% endif %}"
+                         class="book-cover img-fluid"
+                         alt="{{ book.title }}封面">
+                </div>
+                
+                <!-- 借阅按钮 -->
+                <div class="mb-4">
+                    {% if book.is_active and book.available_copies > 0 %}
+                        <a href="{% url 'book_detail' %}?isbn={{ book.id }}&action=borrow" 
+                           class="btn btn-primary action-btn">
+                            <i class="fa fa-book mr-2"></i>借阅此书
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary action-btn disabled">
+                            <i class="fa fa-ban mr-2"></i>暂不可借
+                        </button>
+                    {% endif %}
+                </div>
+
+                <!-- 馆藏信息 -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fa fa-info-circle mr-2"></i>馆藏信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>馆藏位置:</strong> {{ book.location|default:"未指定" }}</p>
+                        <p><strong>总数量:</strong> {{ book.total_copies }} 本</p>
+                        <p><strong>可借数量:</strong> 
+                            <span class="badge {% if book.available_copies > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                                {{ book.available_copies }} 本
+                            </span>
+                        </p>
+                        <p><strong>状态:</strong> 
+                            {% if book.is_active %}
+                                <span class="badge badge-success">可借阅</span>
+                            {% else %}
+                                <span class="badge badge-secondary">暂停借阅</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 借阅趋势图表 -->
+                <div class="card mt-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fa fa-line-chart mr-2"></i>近7天借阅趋势</h5>
+                    </div>
+                    <div class="card-body p-2">
+                        <canvas id="borrowingChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：图书详细信息 -->
+            <div class="book-right-section">
+                <h2 class="book-title">{{ book.title }}</h2>
+                {% if book.other_titles %}
+                <h5 class="book-subtitle">{{ book.other_titles }}</h5>
+                {% endif %}
+
+                <div class="book-meta">
+                    {% if book.authors %}
+                    <div class="row">
+                        <dt class="col-sm-3">责任者</dt>
+                        <dd class="col-sm-9">{{ book.authors }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if book.publisher_info %}
+                    <div class="row">
+                        <dt class="col-sm-3">出版信息</dt>
+                        <dd class="col-sm-9">{{ book.publisher_info }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if book.isbn %}
+                    <div class="row">
+                        <dt class="col-sm-3">ISBN</dt>
+                        <dd class="col-sm-9">{{ book.isbn }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if book.physical_description %}
+                    <div class="row">
+                        <dt class="col-sm-3">载体形态</dt>
+                        <dd class="col-sm-9">{{ book.physical_description }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if book.series %}
+                    <div class="row">
+                        <dt class="col-sm-3">丛编项</dt>
+                        <dd class="col-sm-9">{{ book.series }}</dd>
+                    </div>
+                    {% endif %}
+
+                    {% if book.classification %}
+                    <div class="row">
+                        <dt class="col-sm-3">分类号</dt>
+                        <dd class="col-sm-9">{{ book.classification }}</dd>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 主题标签 -->
+                {% if subjects_list %}
+                <div class="mb-4">
+                    <h5 class="section-title"><i class="fa fa-tags"></i> 主题标签</h5>
+                    <div>
+                        {% for subject in subjects_list|slice:":10" %}
+                        <span class="badge badge-info subject-badge">{{ subject }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 内容简介 -->
+                {% if book.notes %}
+                <div class="mb-4">
+                    <h5 class="section-title"><i class="fa fa-align-left"></i> 内容简介</h5>
+                    <div class="description-content">
+                        {{ book.notes|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 系统信息 -->
+                <div class="text-muted small mt-5">
+                    <p>图书ID: {{ book.id }} | 添加时间: {{ book.created_at|date:"Y-m-d" }} | 最后更新: {{ book.updated_at|date:"Y-m-d" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+    // 自动关闭提示消息
+    $(document).ready(function(){
+        // 5秒后自动关闭提示消息
+        setTimeout(function(){
+            $('.alert-message').fadeOut('slow');
+        }, 5000);
+        
+        // 点击关闭按钮时关闭消息
+        $('.alert .close').on('click', function(){
+            $(this).closest('.alert-message').fadeOut('slow');
+        });
+
+        // 初始化借阅趋势图表
+        console.log('开始初始化图表...');
+        
+        const chartDates = {{ borrowing_chart_dates|safe }};
+        const chartData = {{ borrowing_chart_data|safe }};
+        
+        console.log('图表日期数据:', chartDates);
+        console.log('图表数量数据:', chartData);
+        
+        const chartElement = document.getElementById('borrowingChart');
+        console.log('图表元素:', chartElement);
+        
+        if (!chartElement) {
+            console.error('找不到图表元素');
+            return;
+        }
+        
+        // 检查Chart.js是否加载
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js未正确加载');
+            
+            // 在元素中显示错误信息
+            chartElement.parentElement.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Chart.js加载失败，请检查网络连接</p>';
+            return;
+        }
+        
+        console.log('Chart.js已加载，版本:', Chart.version);
+        
+            try {
+            const ctx = chartElement.getContext('2d');
+            const borrowingChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartDates,
+                datasets: [{
+                    label: '借阅次数',
+                    data: chartData,
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#d4af37',
+                    pointBorderColor: '#b8860b',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: '#b8860b',
+                    pointHoverBorderColor: '#8b4513'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(212, 175, 55, 0.2)',
+                            borderColor: '#d4af37'
+                        },
+                        ticks: {
+                            color: '#8b4513',
+                            font: {
+                                family: 'ZCOOL XiaoWei',
+                                size: 12
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '日期',
+                            color: '#8b4513',
+                            font: {
+                                family: 'ZCOOL XiaoWei',
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(212, 175, 55, 0.2)',
+                            borderColor: '#d4af37'
+                        },
+                        ticks: {
+                            color: '#8b4513',
+                            font: {
+                                family: 'ZCOOL XiaoWei',
+                                size: 12
+                            },
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: '借阅次数',
+                            color: '#8b4513',
+                            font: {
+                                family: 'ZCOOL XiaoWei',
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#8b4513',
+                            font: {
+                                family: 'ZCOOL XiaoWei',
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(212, 175, 55, 0.9)',
+                        titleColor: '#654321',
+                        bodyColor: '#654321',
+                        borderColor: '#d4af37',
+                        borderWidth: 2,
+                        titleFont: {
+                            family: 'ZCOOL XiaoWei',
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            family: 'ZCOOL XiaoWei',
+                            size: 13
+                        },
+                        displayColors: false,
+                        callbacks: {
+                            title: function(context) {
+                                return '日期: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                return '借阅次数: ' + context.parsed.y + ' 次';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    line: {
+                        tension: 0.4
+                    }
+                }
+            }
+        });
+        
+        console.log('图表初始化完成');
+        
+        } catch (error) {
+            console.error('图表初始化失败:', error);
+            // 在canvas位置显示错误信息
+            chartElement.parentElement.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">图表加载失败: ' + error.message + '</p>';
+        }
+        
+    });
+</script>
+{% endblock %}

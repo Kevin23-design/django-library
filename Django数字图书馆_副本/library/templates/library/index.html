@@ -1,0 +1,428 @@
+{% extends 'library/base.html' %}
+
+{% block title %} 欢迎莅临古韵书斋！ {% endblock %}
+
+{% block content %}
+    <div class="container myContainer">
+        
+        <!-- 状态提示消息 -->
+        {% if request.GET.state == 'account_deleted' %}
+        <div class="alert alert-success" style="margin-top: 20px;">
+            <div class="alert-content">
+                <strong>✅ 账号删除成功</strong>
+                <p>您的账号已被永久删除，感谢您曾经使用古韵书斋！</p>
+                <p><small>如需重新使用，请注册新账号。</small></p>
+            </div>
+        </div>
+        {% endif %}
+
+
+        <!-- 新增的AI对话区域 -->
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-8 col-md-offset-2">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            书斋智慧学士
+                            <small class="pull-right">
+                                <button type="button" class="btn btn-xs btn-default" id="clear-history-btn" title="清除对话记录">
+                                    <i class="fa fa-trash"></i> 清除记录
+                                </button>
+                            </small>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="chat-container"
+                             style="height: 500px; overflow-y: scroll; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px;">
+                            <!-- 对话内容将在这里显示 -->
+                            <div class="text-muted text-center">请告知学子所钟情之典籍门类或学问主题，在下当为君荐书...</div>
+                        </div>
+                        <form id="chat-form">
+                            <div class="input-group">
+                                <input type="text" id="user-input" class="form-control"
+                                       placeholder="例如：在下欲寻关于人工智能之典籍..." autocomplete="off">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="submit">发送</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加JavaScript处理对话 -->
+    <script>
+        $(document).ready(function() {
+    const chatContainer = $('#chat-container');
+    const chatForm = $('#chat-form');
+    const userInput = $('#user-input');
+    let currentTaskId = null;
+    let pollingInterval = null;
+    
+    // 聊天记录的localStorage键名
+    const CHAT_HISTORY_KEY = 'libraryAiChatHistory';
+    const CHAT_SCROLL_POSITION_KEY = 'libraryAiChatScrollPosition';
+    
+    // 初始化时加载历史对话
+    loadChatHistory();
+
+    // 添加消息到聊天窗口
+    function addMessage(sender, message, saveToHistory = true) {
+        const messageClass = sender === 'user' ? 'text-right' : 'text-left';
+        const bubbleClass = sender === 'user' ? 'bg-primary' : 'bg-light';
+        const timestamp = new Date().toISOString();
+
+        const messageHtml = `
+            <div class="${messageClass}" style="margin-bottom: 10px;" data-timestamp="${timestamp}" data-sender="${sender}">
+                <div class="d-inline-block p-2 rounded ${bubbleClass}" style="max-width: 80%;">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+        chatContainer.append(messageHtml);
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        
+        // 保存到localStorage
+        if (saveToHistory) {
+            saveChatHistory(sender, message, timestamp);
+        }
+    }
+    
+    // 保存聊天记录到localStorage
+    function saveChatHistory(sender, message, timestamp) {
+        try {
+            let chatHistory = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+            
+            chatHistory.push({
+                sender: sender,
+                message: message,
+                timestamp: timestamp
+            });
+            
+            // 限制历史记录数量，保留最近50条消息
+            if (chatHistory.length > 50) {
+                chatHistory = chatHistory.slice(-50);
+            }
+            
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
+        } catch (e) {
+            console.warn('无法保存聊天记录到localStorage:', e);
+        }
+    }
+    
+    // 从localStorage加载聊天记录
+    function loadChatHistory() {
+        try {
+            const chatHistory = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+            
+            if (chatHistory.length > 0) {
+                // 清除默认提示消息
+                chatContainer.empty();
+                
+                // 重新显示历史消息
+                chatHistory.forEach(function(item) {
+                    if (item.type === 'recommendations') {
+                        // 处理推荐内容
+                        const recommendationDiv = `
+                            <div class="text-left" style="margin-bottom: 10px;" data-timestamp="${item.timestamp}" data-sender="assistant">
+                                <div class="d-inline-block p-2 rounded bg-light" style="max-width: 80%;">
+                                    ${item.message}
+                                </div>
+                            </div>
+                        `;
+                        chatContainer.append(recommendationDiv);
+                    } else {
+                        // 处理普通消息
+                        addMessage(item.sender, item.message, false); // 不重复保存到history
+                    }
+                });
+                
+                // 恢复滚动位置
+                const savedScrollPosition = localStorage.getItem(CHAT_SCROLL_POSITION_KEY);
+                if (savedScrollPosition) {
+                    chatContainer.scrollTop(parseInt(savedScrollPosition));
+                } else {
+                    chatContainer.scrollTop(chatContainer[0].scrollHeight);
+                }
+            }
+        } catch (e) {
+            console.warn('无法加载聊天记录:', e);
+        }
+    }
+    
+    // 清除聊天记录
+    function clearChatHistory() {
+        try {
+            localStorage.removeItem(CHAT_HISTORY_KEY);
+            localStorage.removeItem(CHAT_SCROLL_POSITION_KEY);
+            chatContainer.empty();
+            chatContainer.append('<div class="text-muted text-center">请告知学子所钟情之典籍门类或学问主题，在下当为君荐书...</div>');
+        } catch (e) {
+            console.warn('无法清除聊天记录:', e);
+        }
+    }
+    
+    // 监听页面卸载，保存滚动位置
+    $(window).on('beforeunload', function() {
+        try {
+            localStorage.setItem(CHAT_SCROLL_POSITION_KEY, chatContainer.scrollTop());
+        } catch (e) {
+            console.warn('无法保存滚动位置:', e);
+        }
+    });
+    
+    // 定期保存滚动位置
+    chatContainer.on('scroll', function() {
+        try {
+            localStorage.setItem(CHAT_SCROLL_POSITION_KEY, chatContainer.scrollTop());
+        } catch (e) {
+            console.warn('无法保存滚动位置:', e);
+        }
+    });
+
+    // 显示推荐图书
+    function showRecommendations(books) {
+        const timestamp = new Date().toISOString();
+        let booksHtml = '<div class="recommendations mt-3"><h5>为您推荐以下图书：</h5><div class="row">';
+
+        books.forEach(book => {
+            booksHtml += `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        ${book.image ? `<img src="${book.image}" class="card-img-top" alt="${book.title}" style="height: 180px; object-fit: cover;">` :
+                          `<div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                              <i class="fas fa-book fa-3x text-muted"></i>
+                          </div>`}
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">${book.title}</h6>
+                            <p class="card-text text-muted small mt-auto">${book.authors || '未知作者'}</p>
+                            <a href="/book/detail?isbn=${book.id}" class="btn btn-sm btn-outline-primary mt-2">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        booksHtml += '</div></div>';
+        
+        // 添加推荐结果到容器
+        const recommendationDiv = `
+            <div class="text-left" style="margin-bottom: 10px;" data-timestamp="${timestamp}" data-sender="assistant">
+                <div class="d-inline-block p-2 rounded bg-light" style="max-width: 80%;">
+                    ${booksHtml}
+                </div>
+            </div>
+        `;
+        
+        chatContainer.append(recommendationDiv);
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        
+        // 保存推荐结果到localStorage
+        try {
+            let chatHistory = JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]');
+            chatHistory.push({
+                sender: 'assistant',
+                message: booksHtml,
+                timestamp: timestamp,
+                type: 'recommendations'
+            });
+            
+            if (chatHistory.length > 50) {
+                chatHistory = chatHistory.slice(-50);
+            }
+            
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatHistory));
+        } catch (e) {
+            console.warn('无法保存推荐记录到localStorage:', e);
+        }
+    }
+
+    // 轮询任务状态
+    function pollTaskStatus(taskId) {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+
+        // 立即检查一次
+        checkTask(taskId);
+
+        // 设置轮询
+        pollingInterval = setInterval(() => {
+            checkTask(taskId);
+        }, 1500); // 1.5秒轮询一次
+
+        currentTaskId = taskId;
+    }
+
+    // 检查任务状态
+    function checkTask(taskId) {
+        $.get('/api/check_task/', {task_id: taskId}, function(response) {
+            if (response.status === 'success') {
+                const thinkingMsg = chatContainer.find('.thinking-msg');
+
+                switch(response.task_status) {
+                    case 'completed':
+                        // 任务完成
+                        clearInterval(pollingInterval);
+                        thinkingMsg.remove();
+
+                        const result = response.result;
+                        addMessage('assistant', result.reply);
+
+                        if (result.recommendations && result.recommendations.length > 0) {
+                            showRecommendations(result.recommendations);
+                        }
+                        break;
+
+                    case 'failed':
+                        // 任务失败
+                        clearInterval(pollingInterval);
+                        thinkingMsg.remove();
+                        addMessage('assistant', '处理失败: ' + (response.error || '未知错误'));
+                        break;
+
+                    case 'pending':
+                        // 任务仍在处理中，保持等待状态
+                        if (!thinkingMsg.length) {
+                            chatContainer.append(`
+                                <div class="text-center thinking-msg text-muted">
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                    <span class="ml-2">思考中，请稍候...</span>
+                                </div>
+                            `);
+                        }
+                        break;
+                }
+            } else {
+                // 查询任务状态失败
+                clearInterval(pollingInterval);
+                chatContainer.find('.thinking-msg').remove();
+                addMessage('assistant', '查询任务状态失败: ' + (response.message || '未知错误'));
+            }
+        }).fail(function() {
+            clearInterval(pollingInterval);
+            chatContainer.find('.thinking-msg').remove();
+            addMessage('assistant', '无法连接到服务器，请检查网络连接');
+        });
+    }
+
+    // 处理表单提交
+    chatForm.on('submit', function(e) {
+        e.preventDefault();
+        const message = userInput.val().trim();
+
+        if (!message) {
+            addMessage('assistant', '请输入您想查询的内容');
+            return;
+        }
+
+        // 显示用户消息
+        addMessage('user', message);
+        userInput.val('').focus();
+
+        // 禁用输入框和按钮
+        userInput.prop('disabled', true);
+        chatForm.find('button').prop('disabled', true);
+
+        // 提交任务
+        $.ajax({
+            url: '/api/chat/',
+            method: 'POST',
+            data: {
+                message: message,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // 开始轮询任务状态
+                    pollTaskStatus(response.task_id);
+                } else {
+                    addMessage('assistant', '提交任务失败: ' + (response.message || '未知错误'));
+                }
+            },
+            error: function() {
+                addMessage('assistant', '无法提交请求，请稍后再试');
+            },
+            complete: function() {
+                // 重新启用输入框和按钮
+                userInput.prop('disabled', false);
+                chatForm.find('button').prop('disabled', false);
+            }
+        });
+    });
+    
+    // 清除聊天记录按钮事件
+    $('#clear-history-btn').on('click', function() {
+        if (confirm('确定要清除所有对话记录吗？此操作无法撤销。')) {
+            clearChatHistory();
+        }
+    });
+});
+    </script>
+
+    <style>
+        .bg-primary {
+            color: white;
+            background-color: #007bff;
+            border-radius: 18px;
+            padding: 8px 12px;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa;
+            border-radius: 18px;
+            padding: 8px 12px;
+        }
+
+        .recommendations {
+            border-top: 1px dashed #ddd;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .thinking-msg {
+            padding: 10px;
+            color: #6c757d;
+        }
+
+        #chat-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        #clear-history-btn {
+            margin-top: -2px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        #clear-history-btn:hover {
+            color: #d9534f;
+            background: rgba(217, 83, 79, 0.1);
+        }
+        
+        .panel-title {
+            position: relative;
+        }
+        
+        .panel-title .pull-right {
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+    </style>
+{% endblock %}

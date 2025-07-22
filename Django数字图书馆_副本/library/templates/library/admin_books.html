@@ -1,0 +1,511 @@
+{% extends "library/base.html" %}
+{% load static %}
+{% block title %}图书管理 - 古韵书斋{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    body {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        min-height: 100vh;
+    }
+    
+    .admin-container {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 3px solid #d4af37;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px auto;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        opacity: 0.3;
+        z-index: 0;
+        animation: gentle-rotate 30s linear infinite;
+    }
+    
+    @keyframes gentle-rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .admin-header {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #d4af37;
+        padding-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+    }
+    
+    .admin-nav {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .admin-btn {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        border: 2px solid #8b4513;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+        transform: translateY(-2px);
+        color: #654321;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+    
+    .admin-btn.success {
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        color: white;
+        border-color: #1e7e34;
+    }
+    
+    .admin-btn.success:hover {
+        background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+        color: white;
+    }
+    
+    .admin-btn.danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border-color: #bd2130;
+    }
+    
+    .admin-btn.danger:hover {
+        background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        color: white;
+    }
+    
+    .search-section {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .search-form {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .search-input {
+        padding: 10px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 8px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        width: 300px;
+        background: #fdfcf8;
+        color: #654321;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #b8860b;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    
+    .books-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'ZCOOL XiaoWei', serif;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .books-table th {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #d4af37;
+        font-weight: bold;
+    }
+    
+    .books-table td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #d4af37;
+        background: rgba(255, 255, 255, 0.5);
+        vertical-align: middle;
+    }
+    
+    .books-table tr:nth-child(even) td {
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .book-image {
+        width: 50px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #d4af37;
+    }
+    
+    .book-title {
+        font-weight: bold;
+        color: #8b4513;
+        max-width: 150px;
+        word-wrap: break-word;
+    }
+    
+    .book-author {
+        color: #8b4513;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        color: white;
+        transition: all 0.3s ease;
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    }
+    
+    .btn-edit:hover {
+        background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    
+    .btn-delete:hover {
+        background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .pagination a {
+        padding: 8px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 5px;
+        color: #8b4513;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: rgba(255, 255, 255, 0.8);
+    }
+    
+    .pagination a:hover {
+        background: #d4af37;
+        color: #654321;
+    }
+    
+    .pagination .current {
+        background: #d4af37;
+        color: #654321;
+        padding: 8px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 5px;
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+    
+    .page-jump {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .jump-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #8b4513;
+        font-weight: bold;
+    }
+    
+    .jump-input {
+        width: 60px;
+        padding: 5px 8px;
+        border: 2px solid #d4af37;
+        border-radius: 4px;
+        text-align: center;
+        font-family: 'ZCOOL XiaoWei', serif;
+        background: #fdfcf8;
+        color: #654321;
+    }
+    
+    .jump-input:focus {
+        outline: none;
+        border-color: #b8860b;
+        box-shadow: 0 0 5px rgba(212, 175, 55, 0.3);
+    }
+    
+    .jump-btn {
+        padding: 5px 12px;
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        border: 2px solid #d4af37;
+        border-radius: 4px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .jump-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #996515 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(212, 175, 55, 0.3);
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border: 2px solid #28a745;
+        color: #155724;
+    }
+    
+    .alert-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border: 2px solid #dc3545;
+        color: #721c24;
+    }
+    
+    .stock-warning {
+        color: #dc3545;
+        font-weight: bold;
+    }
+    
+    .stock-normal {
+        color: #28a745;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-container">
+        <div class="admin-header">
+            <span>📚 图书管理</span>
+            <div class="admin-nav">
+                <a href="/admin-books/add/" class="admin-btn success">➕ 添加图书</a>
+                <a href="/admin-dashboard/" class="admin-btn">📊 返回仪表板</a>
+            </div>
+        </div>
+        
+        <!-- 状态提示 -->
+        {% if request.GET.success == 'add' %}
+        <div class="alert alert-success">✅ 图书添加成功！</div>
+        {% elif request.GET.success == 'edit' %}
+        <div class="alert alert-success">✅ 图书修改成功！</div>
+        {% elif request.GET.success == 'delete' %}
+        <div class="alert alert-success">✅ 图书删除成功！</div>
+        {% elif request.GET.error == 'has_borrowings' %}
+        <div class="alert alert-error">❌ 无法删除：该图书还有未归还的借阅记录</div>
+        {% endif %}
+        
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <form method="GET" class="search-form">
+                <input type="text" name="search" class="search-input" 
+                       placeholder="搜索图书标题、作者或ISBN..." 
+                       value="{{ search_query }}">
+                <button type="submit" class="admin-btn">🔍 搜索</button>
+                {% if search_query %}
+                <a href="/admin-books/" class="admin-btn">🔄 清除搜索</a>
+                {% endif %}
+            </form>
+        </div>
+        
+        <!-- 图书列表 -->
+        {% if books %}
+        <table class="books-table">
+            <thead>
+                <tr>
+                    <th>封面</th>
+                    <th>标题</th>
+                    <th>作者</th>
+                    <th>ISBN</th>
+                    <th>出版信息</th>
+                    <th>位置</th>
+                    <th>价格</th>
+                    <th>库存</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td>
+                        {% if book.image %}
+                        <img src="{{ book.image.url }}" class="book-image" alt="{{ book.title }}">
+                        {% else %}
+                        <div style="width:50px;height:70px;background:#f8f9fa;border:1px solid #dee2e6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#6c757d;">无封面</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="book-title">{{ book.title }}</div>
+                    </td>
+                    <td>
+                        <div class="book-author">{{ book.authors|default:"未知" }}</div>
+                    </td>
+                    <td>{{ book.isbn|default:"无" }}</td>
+                    <td>{{ book.publisher_info|default:"未知" }}</td>
+                    <td>{{ book.location|default:"未设置" }}</td>
+                    <td>¥{{ book.get_price|floatformat:2 }}</td>
+                    <td>
+                        {% if book.available_copies <= 0 %}
+                        <span class="stock-warning">{{ book.available_copies }}/{{ book.total_copies }}</span>
+                        {% elif book.available_copies <= 2 %}
+                        <span style="color: #ffc107; font-weight: bold;">{{ book.available_copies }}/{{ book.total_copies }}</span>
+                        {% else %}
+                        <span class="stock-normal">{{ book.available_copies }}/{{ book.total_copies }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if book.is_active %}
+                        <span style="color: #28a745; font-weight: bold;">正常</span>
+                        {% else %}
+                        <span style="color: #dc3545; font-weight: bold;">停用</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="/admin-books/edit/{{ book.id }}/" class="action-btn btn-edit">编辑</a>
+                            <a href="/admin-books/delete/{{ book.id }}/" class="action-btn btn-delete" 
+                               onclick="return confirm('确定要删除《{{ book.title }}》吗？此操作不可恢复！')">删除</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- 分页 -->
+        {% if books.has_other_pages %}
+        <div class="pagination">
+            {% if books.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; 首页</a>
+            <a href="?page={{ books.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">上一页</a>
+            {% endif %}
+            
+            <span class="current">第 {{ books.number }} 页，共 {{ books.paginator.num_pages }} 页</span>
+            
+            {% if books.has_next %}
+            <a href="?page={{ books.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">下一页</a>
+            <a href="?page={{ books.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">末页 &raquo;</a>
+            {% endif %}
+        </div>
+        
+        <!-- 页码跳转 -->
+        <div class="page-jump">
+            <form method="get" class="jump-form" onsubmit="return validatePageJump()">
+                {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+                {% endif %}
+                <span>跳转到第</span>
+                <input type="number" name="page" id="jump-page" min="1" max="{{ books.paginator.num_pages }}" 
+                       placeholder="页码" class="jump-input">
+                <span>页</span>
+                <button type="submit" class="jump-btn">跳转</button>
+            </form>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div style="text-align: center; color: #6c757d; padding: 40px;">
+            {% if search_query %}
+            <p>😔 没有找到匹配"{{ search_query }}"的图书</p>
+            <a href="/admin-books/" class="admin-btn">查看所有图书</a>
+            {% else %}
+            <p>📚 还没有图书，<a href="/admin-books/add/">立即添加第一本图书</a></p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function validatePageJump() {
+    const pageInput = document.getElementById('jump-page');
+    const pageValue = parseInt(pageInput.value);
+    const maxPages = {{ books.paginator.num_pages }};
+    
+    if (!pageValue || pageValue < 1 || pageValue > maxPages) {
+        alert('请输入有效的页码（1-' + maxPages + '）');
+        pageInput.focus();
+        return false;
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}

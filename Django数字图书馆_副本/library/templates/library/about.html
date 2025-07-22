@@ -1,0 +1,230 @@
+{% extends 'library/base.html' %}
+{% load static %}
+
+{% block title %}书院简介 - 古韵书斋{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    body {
+        background: linear-gradient(135deg, #f5f1eb 0%, #ede3d9 100%);
+        font-family: 'ZCOOL XiaoWei', serif;
+    }
+    
+    .about-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px;
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 2px solid #d4af37;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(138, 115, 78, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .about-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="%23d4af37" opacity="0.05"><circle cx="20" cy="20" r="2"/><circle cx="80" cy="20" r="2"/><circle cx="50" cy="50" r="3"/><circle cx="20" cy="80" r="2"/><circle cx="80" cy="80" r="2"/></g></svg>');
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(180deg); }
+    }
+    
+    .about-header {
+        color: #8b4513;
+        font-family: 'Ma Shan Zheng', cursive;
+        border-bottom: 3px solid #d4af37;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
+        position: relative;
+    }
+    
+    .about-header::after {
+        content: "✧";
+        position: absolute;
+        right: 0;
+        bottom: -15px;
+        color: #d4af37;
+        font-size: 1.5rem;
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #d4af37;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+        filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+    }
+    
+    .ancient-card {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        transition: all 0.4s ease;
+        position: relative;
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+    }
+    
+    .ancient-card::before {
+        content: "❋";
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: #d4af37;
+        opacity: 0.6;
+        font-size: 1.2rem;
+    }
+    
+    .ancient-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(212, 175, 55, 0.4);
+        border-color: #b8860b;
+    }
+    
+    .section-title {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+        font-size: 2rem;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .section-title::before,
+    .section-title::after {
+        content: "◆";
+        color: #d4af37;
+        font-size: 1rem;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .section-title::before {
+        left: -30px;
+    }
+    
+    .section-title::after {
+        right: -30px;
+    }
+    
+    .ancient-text {
+        color: #654321;
+        line-height: 1.8;
+        font-size: 1.1rem;
+    }
+    
+    .contact-section {
+        background: linear-gradient(135deg, #f0e6d2 0%, #e8dcc6 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 30px;
+        margin-top: 40px;
+        text-align: center;
+    }
+    
+    .contact-item {
+        color: #8b4513;
+        margin: 10px 0;
+        font-size: 1.1rem;
+    }
+    
+    .contact-item i {
+        color: #d4af37;
+        margin-right: 10px;
+        width: 20px;
+    }
+    
+    .lead {
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #654321;
+        font-size: 1.2rem;
+        font-style: italic;
+    }
+    
+    h3, h4 {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+    }
+    
+    .feature-text {
+        color: #654321;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="about-container">
+        <div class="text-center mb-5">
+            <h1 class="about-header">古韵书斋简介</h1>
+            <p class="lead">承千年文韵，启智慧之门，基于Django与Bootstrap构建的雅致数字书院</p>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div class="ancient-card text-center">
+                    <i class="fa fa-book feature-icon"></i>
+                    <h3>书院宗旨</h3>
+                    <p class="ancient-text">秉承"学而时习之，不亦说乎"之理念，为四方学子提供便捷的典籍检索、借阅与管理服务，打破时空桎梏，让智慧之光普照人间。</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="ancient-card text-center">
+                    <i class="fa fa-laptop feature-icon"></i>
+                    <h3>技艺架构</h3>
+                    <p class="ancient-text">以Django为基石，Bootstrap为华彩，SQLITE为宝库，管理端用户端双端设计，融汇古今智慧，铸就稳固高效的数字书院管理体系。</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">主要功用</h2>
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="ancient-card text-center">
+                    <i class="fa fa-search fa-3x text-warning mb-3"></i>
+                    <h4>智慧推荐</h4>
+                    <p class="feature-text">与书斋智慧学士交流，智慧推荐，精准寻觅典籍</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="ancient-card text-center">
+                    <i class="fa fa-exchange fa-3x text-warning mb-3"></i>
+                    <h4>用户端</h4>
+                    <p class="feature-text">在线借阅、归还、续借，一站式便民服务，同时可以选择在排行榜上分享你的借阅书籍，了解最近流行书</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="ancient-card text-center">
+                    <i class="fa fa-user fa-3x text-warning mb-3"></i>
+                    <h4>管理端</h4>
+                    <p class="feature-text">编辑典籍的同时，精准了解各位学士的借阅情况，统一管理</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h3>联系书院</h3>
+            <div class="contact-item"><i class="fa fa-map-marker"></i> 书院地址：上海市普陀区华东师范大学古韵书斋大厦</div>
+            <div class="contact-item"><i class="fa fa-phone"></i> 联系方式：123-456-789</div>
+            <div class="contact-item"><i class="fa fa-envelope"></i> 电子邮箱：contact@library.com</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

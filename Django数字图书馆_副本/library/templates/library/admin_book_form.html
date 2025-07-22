@@ -1,0 +1,369 @@
+{% extends "library/base.html" %}
+{% load static %}
+{% block title %}
+{% if action == 'add' %}添加图书{% else %}编辑图书{% endif %} - 古韵书斋
+{% endblock %}
+
+{% block css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+    
+    body {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        min-height: 100vh;
+    }
+    
+    .admin-container {
+        background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+        border: 3px solid #d4af37;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px auto;
+        max-width: 800px;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        opacity: 0.3;
+        z-index: 0;
+        animation: gentle-rotate 30s linear infinite;
+    }
+    
+    @keyframes gentle-rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .admin-header {
+        font-family: 'Ma Shan Zheng', cursive;
+        color: #8b4513;
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #d4af37;
+        padding-bottom: 15px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+    }
+    
+    .form-container {
+        background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-family: 'ZCOOL XiaoWei', serif;
+        color: #8b4513;
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 1.1rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #d4af37;
+        border-radius: 8px;
+        background: #fdfcf8;
+        color: #654321;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #b8860b;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        background: #ffffff;
+    }
+    
+    .form-control[type="file"] {
+        padding: 10px;
+        border: 2px dashed #d4af37;
+        background: #fdfcf8;
+    }
+    
+    .form-control[type="file"]:hover {
+        border-color: #b8860b;
+        background: #fff8e7;
+    }
+    
+    .form-control textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .admin-btn {
+        background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+        color: #654321;
+        border: 2px solid #8b4513;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-btn:hover {
+        background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+        transform: translateY(-2px);
+        color: #654321;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+    
+    .admin-btn.secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        color: white;
+        border-color: #545b62;
+    }
+    
+    .admin-btn.secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-family: 'ZCOOL XiaoWei', serif;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .alert-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border: 2px solid #dc3545;
+        color: #721c24;
+    }
+    
+    .help-text {
+        font-size: 0.9rem;
+        color: #8b4513;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    
+    .current-image {
+        max-width: 150px;
+        max-height: 200px;
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    
+    .required {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-container">
+        <h1 class="admin-header">
+            {% if action == 'add' %}
+            📚 添加新图书
+            {% else %}
+            ✏️ 编辑图书信息
+            {% endif %}
+        </h1>
+        
+        {% if error %}
+        <div class="alert alert-error">❌ {{ error }}</div>
+        {% endif %}
+        
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">图书标题 <span class="required">*</span></label>
+                        <input type="text" name="title" class="form-control" 
+                               value="{% if book %}{{ book.title }}{% elif form_data %}{{ form_data.title }}{% endif %}" 
+                               required placeholder="请输入图书标题">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">作者 <span class="required">*</span></label>
+                        <input type="text" name="authors" class="form-control" 
+                               value="{% if book %}{{ book.authors }}{% elif form_data %}{{ form_data.authors }}{% endif %}" 
+                               required placeholder="请输入作者姓名">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">ISBN <span class="required">*</span></label>
+                        <input type="text" name="isbn" class="form-control" 
+                               value="{% if book %}{{ book.isbn }}{% elif form_data %}{{ form_data.isbn }}{% endif %}" 
+                               required placeholder="请输入ISBN编号">
+                        <div class="help-text">图书的唯一标识号，可包含价格信息</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">出版信息</label>
+                        <input type="text" name="publisher_info" class="form-control" 
+                               value="{% if book %}{{ book.publisher_info }}{% elif form_data %}{{ form_data.publisher_info }}{% endif %}" 
+                               placeholder="请输入出版社及出版信息">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">总数量 <span class="required">*</span></label>
+                        <input type="number" name="total_copies" class="form-control" 
+                               value="{% if book %}{{ book.total_copies }}{% elif form_data %}{{ form_data.total_copies }}{% else %}1{% endif %}" 
+                               required min="1" placeholder="图书总数量">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">可借数量 <span class="required">*</span></label>
+                        <input type="number" name="available_copies" class="form-control" 
+                               value="{% if book %}{{ book.available_copies }}{% elif form_data %}{{ form_data.available_copies }}{% else %}1{% endif %}" 
+                               required min="0" placeholder="当前可借数量">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">存放位置</label>
+                        <input type="text" name="location" class="form-control" 
+                               value="{% if book %}{{ book.location }}{% elif form_data %}{{ form_data.location }}{% endif %}" 
+                               placeholder="例如：A区1-2-3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">当前价格</label>
+                        <input type="text" class="form-control" 
+                               value="{% if book %}¥{{ book.get_price|floatformat:2 }}{% else %}¥0.00{% endif %}" 
+                               disabled readonly>
+                        <div class="help-text">价格从ISBN字段自动解析</div>
+                    </div>
+                </div>
+                
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">图书封面</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <div class="help-text">支持 JPG、PNG、GIF 等图片格式</div>
+                        {% if book.image %}
+                        <div>
+                            <p style="margin-top: 10px; color: #007bff;">当前封面：</p>
+                            <img src="{{ book.image.url }}" class="current-image" alt="{{ book.title }}">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label class="form-label">图书简介</label>
+                        <textarea name="notes" class="form-control" rows="4" 
+                                  placeholder="请输入图书简介（可选）">{% if book %}{{ book.notes }}{% elif form_data %}{{ form_data.notes }}{% endif %}</textarea>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="admin-btn">
+                        {% if action == 'add' %}
+                        ✅ 添加图书
+                        {% else %}
+                        💾 保存修改
+                        {% endif %}
+                    </button>
+                    <a href="/admin-books/" class="admin-btn secondary">🔙 返回列表</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 表单验证
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const totalCopiesInput = document.querySelector('input[name="total_copies"]');
+    const availableCountInput = document.querySelector('input[name="available_copies"]');
+    
+    // 检查可借数量不超过总数量
+    function validateCopies() {
+        const total = parseInt(totalCopiesInput.value) || 0;
+        const available = parseInt(availableCountInput.value) || 0;
+        
+        if (available > total) {
+            availableCountInput.setCustomValidity('可借数量不能超过总数量');
+        } else {
+            availableCountInput.setCustomValidity('');
+        }
+    }
+    
+    totalCopiesInput.addEventListener('input', validateCopies);
+    availableCountInput.addEventListener('input', validateCopies);
+    
+    form.addEventListener('submit', function(e) {
+        validateCopies();
+        
+        const title = document.querySelector('input[name="title"]').value.trim();
+        const authors = document.querySelector('input[name="authors"]').value.trim();
+        const isbn = document.querySelector('input[name="isbn"]').value.trim();
+        
+        if (!title || !authors || !isbn) {
+            e.preventDefault();
+            alert('请填写必填项：图书标题、作者和ISBN');
+            return false;
+        }
+        
+        return true;
+    });
+});
+</script>
+{% endblock %}

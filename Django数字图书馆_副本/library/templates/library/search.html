@@ -1,0 +1,761 @@
+{% extends "library/base.html" %}
+{% load static %}
+
+{% block title %}图书搜索 - 图书馆系统{% endblock %}
+
+{% block css %}
+    <style>
+        .search-container {
+            background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+            border: 3px solid #d4af37;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="%23d4af37" opacity="0.08"><circle cx="20" cy="20" r="3"/><circle cx="80" cy="20" r="2"/><circle cx="50" cy="50" r="4"/><circle cx="20" cy="80" r="2"/><circle cx="80" cy="80" r="3"/></g></svg>');
+            animation: searchFloat 25s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes searchFloat {
+            0%, 100% { transform: translateX(0px) translateY(0px) rotate(0deg); }
+            25% { transform: translateX(10px) translateY(-5px) rotate(90deg); }
+            50% { transform: translateX(-5px) translateY(-10px) rotate(180deg); }
+            75% { transform: translateX(-10px) translateY(5px) rotate(270deg); }
+        }
+
+        .search-title {
+            color: #8b4513;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+            position: relative;
+        }
+
+        .search-title::before,
+        .search-title::after {
+            content: "◆";
+            color: #d4af37;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .search-title::before {
+            left: -40px;
+        }
+
+        .search-title::after {
+            right: -40px;
+        }
+
+        /* 古风单选按钮样式 */
+        .radio-inline {
+            margin-right: 20px;
+            margin-bottom: 15px;
+        }
+
+        .radio-inline input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+            accent-color: #d4af37;
+        }
+
+        .radio-inline label {
+            color: #8b4513;
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+        }
+
+        .radio-inline label:hover {
+            color: #654321;
+            background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+            border-color: #d4af37;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .radio-inline input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: #654321;
+            border-color: #d4af37;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        /* 古风搜索输入框样式 */
+        .ancient-search-group {
+            background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%);
+            border: 2px solid #d4af37;
+            border-radius: 15px;
+            padding: 5px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .ancient-search-group:hover {
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .ancient-search-input {
+            border: none !important;
+            background: transparent !important;
+            color: #8b4513 !important;
+            font-family: 'ZCOOL XiaoWei', serif !important;
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            padding: 12px 20px !important;
+            box-shadow: none !important;
+        }
+
+        .ancient-search-input:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            background: #fffef9 !important;
+        }
+
+        .ancient-search-input::placeholder {
+            color: #b8860b !important;
+            font-style: italic !important;
+        }
+
+        .ancient-search-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+            border: 2px solid #d4af37 !important;
+            color: #654321 !important;
+            font-family: 'ZCOOL XiaoWei', serif !important;
+            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+            padding: 12px 25px !important;
+            border-radius: 12px !important;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+        }
+
+        .ancient-search-btn:hover {
+            background: linear-gradient(135deg, #b8860b 0%, #996515 100%) !important;
+            border-color: #b8860b !important;
+            color: #654321 !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5) !important;
+        }
+
+        .ancient-search-btn i {
+            margin-right: 8px;
+            color: #ffd700;
+        }
+
+        .book-card:hover {
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .book-cover {
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-height: 120px;
+            object-fit: contain;
+        }
+
+        .hint-banner {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: #654321;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            font-family: 'ZCOOL XiaoWei', serif;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .hint-banner h4 {
+            margin: 0;
+            color: #654321;
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        .hint-banner i {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .availability-badge {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+        }
+
+        .publisher-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .subject-tag {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        /* 古风分页样式 */
+        .pagination .page-link {
+            background: linear-gradient(135deg, #fff8e7 0%, #f5f0e8 100%) !important;
+            border: 2px solid #d4af37 !important;
+            color: #8b4513 !important;
+            font-family: 'ZCOOL XiaoWei', serif !important;
+            font-weight: 600 !important;
+            padding: 8px 16px !important;
+            margin: 0 3px !important;
+            border-radius: 10px !important;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2) !important;
+        }
+
+        .pagination .page-link:hover {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+            border-color: #b8860b !important;
+            color: #654321 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4) !important;
+            text-decoration: none !important;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: linear-gradient(135deg, #f0e6d2 0%, #e8dcc6 100%) !important;
+            border-color: #c9a876 !important;
+            color: #999 !important;
+            opacity: 0.6 !important;
+            box-shadow: none !important;
+        }
+
+        /* 集成页码跳转样式 */
+        .page-jump-item .page-info-container {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+            border-color: #d4af37 !important;
+            color: #654321 !important;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5) !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
+            cursor: pointer !important;
+            min-width: 200px !important;
+            text-align: center !important;
+            position: relative !important;
+        }
+
+        .page-jump-item .page-info-container:hover {
+            background: linear-gradient(135deg, #b8860b 0%, #996515 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6) !important;
+        }
+
+        .page-display {
+            display: block;
+            font-weight: 700 !important;
+        }
+
+        .jump-hint {
+            font-size: 0.7rem !important;
+            color: #ffd700 !important;
+            font-style: italic !important;
+            display: block !important;
+            margin-top: 2px !important;
+        }
+
+        .page-jump-form {
+            padding: 8px !important;
+            white-space: nowrap !important;
+        }
+
+        .jump-controls {
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            justify-content: center !important;
+        }
+
+        .jump-nav-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+            border: 2px solid #4CAF50 !important;
+            color: white !important;
+            font-weight: 600 !important;
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .jump-nav-btn:hover:not(.disabled) {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%) !important;
+            border-color: #45a049 !important;
+            transform: translateY(-1px) !important;
+            text-decoration: none !important;
+            color: white !important;
+        }
+
+        .jump-nav-btn.disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #999999 100%) !important;
+            border-color: #cccccc !important;
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+        }
+
+        .jump-input-group {
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }
+
+        .page-jump-input {
+            border: 2px solid #d4af37 !important;
+            background-color: #fdfcf8 !important;
+            color: #8b4513 !important;
+            font-family: 'ZCOOL XiaoWei', serif !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            width: 50px !important;
+            border-radius: 6px !important;
+        }
+
+        .page-jump-input:focus {
+            border-color: #b8860b !important;
+            box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
+            background-color: #fffef9 !important;
+        }
+
+        .jump-cancel-btn {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%) !important;
+            border: 2px solid #f44336 !important;
+            color: white !important;
+            font-weight: 600 !important;
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 6px !important;
+        }
+
+        .jump-cancel-btn:hover {
+            background: linear-gradient(135deg, #da190b 0%, #c62828 100%) !important;
+            border-color: #da190b !important;
+            color: white !important;
+        }
+
+        /* 分页容器样式 */
+        .pagination-wrapper {
+            background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+            border: 2px solid #d4af37;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+
+        .pagination-wrapper::before {
+            content: "◆";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #fdfcf8 0%, #f9f6f0 100%);
+            color: #d4af37;
+            font-size: 1.2rem;
+            padding: 0 10px;
+        }
+
+        @media (max-width: 768px) {
+            .pagination .page-link {
+                padding: 6px 12px !important;
+                font-size: 0.9rem !important;
+            }
+
+            .page-jump-item .page-info-container {
+                min-width: 180px !important;
+            }
+
+            .page-jump-input {
+                width: 40px !important;
+            }
+
+            .jump-controls {
+                gap: 3px !important;
+            }
+
+            .jump-nav-btn {
+                width: 28px !important;
+                height: 28px !important;
+            }
+
+            .jump-cancel-btn {
+                width: 28px !important;
+                height: 28px !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <!-- 搜索框 -->
+                <div class="search-container">
+                    <h2 class="search-title">典籍检索</h2>
+                    <form action="/search/" method="GET">
+                        <div class="row">
+                            <div class="col-lg-8 col-lg-offset-2">
+                                <!-- 搜索选项 -->
+                                <div class="text-center mb-3">
+                                    {% for radio in searchForm.search_by %}
+                                        <div class="radio-inline">
+                                            {{ radio }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- 搜索输入组 -->
+                                <div class="ancient-search-group">
+                                    <div class="input-group">
+                                        <input type="text" name="keyword" class="form-control ancient-search-input" 
+                                               placeholder="请输入书名、作者、ISBN或主题词..." 
+                                               value="{{ request.GET.keyword|default:'' }}">
+                                        <span class="input-group-btn">
+                                            <button class="btn ancient-search-btn" type="submit">
+                                                <i class="fa fa-search"></i>开始检索
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 搜索结果提示 -->
+                {% if keyword %}
+                    <div class="hint-banner">
+                        <h4><i class="fa fa-info-circle"></i> 以下是{{ search_by }}匹配"{{ keyword }}"的结果</h4>
+                    </div>
+                {% endif %}
+
+                <!-- 图书列表 -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>封面</th>
+                            <th>题名/责任者</th>
+                            <th>出版信息</th>
+                            <th>主题分类</th>
+                            <th>馆藏信息</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for book in books %}
+                            <tr class="book-card">
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'book_detail' %}?isbn={{ book.id }}">
+                                        <img class="book-cover img-fluid"
+                                             src="
+                                                     {% if book.image %}{{ book.image.url }}{% else %}{% static 'images/default-book.png' %}{% endif %}"
+                                             width="80"
+                                             alt="{{ book.title }}封面">
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'book_detail' %}?isbn={{ book.id }}"
+                                       class="text-primary font-weight-bold">
+                                        {{ book.title }}
+                                    </a>
+                                    {% if book.other_titles %}
+                                        <div class="text-muted small mt-1">其他题名: {{ book.other_titles }}</div>
+                                    {% endif %}
+                                    {% if book.authors %}
+                                        <div class="text-info small mt-1">责任者: {{ book.authors }}</div>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if book.publisher_info %}
+                                        <div class="publisher-info">{{ book.publisher_info }}</div>
+                                    {% endif %}
+                                    {% if book.isbn %}
+                                        <div class="small mt-1">ISBN: {{ book.isbn }}</div>
+                                    {% endif %}
+                                    {% if book.physical_description %}
+                                        <div class="small mt-1">{{ book.physical_description }}</div>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if book.subjects %}
+                                        <div class="d-flex flex-wrap">
+                                            {% for subject in book.subjects|slice:":3" %}
+                                                <span class="badge badge-secondary subject-tag">{{ subject }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if book.classification %}
+                                        <div class="small mt-1">分类号: {{ book.classification }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if book.location %}
+                                        <div class="small">位置: {{ book.location }}</div>
+                                    {% endif %}
+                                    <div class="small mt-1">总数: {{ book.total_copies }}</div>
+                                    <div class="small mt-1">可借: {{ book.available_copies }}</div>
+                                </td>
+                                <td>
+                                    {% if book.is_active and book.available_copies > 0 %}
+                                        <span class="badge badge-success availability-badge">可借阅</span>
+                                    {% else %}
+                                        <span class="badge badge-danger availability-badge">不可借</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                    <h4>没有找到匹配的图书</h4>
+                                    <p>请尝试其他搜索关键词</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                {% if books.paginator.num_pages > 1 %}
+                    <div class="pagination-wrapper">
+                        <nav aria-label="Page navigation" class="mt-2">
+                            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                                <!-- 分页控件 -->
+                                <ul class="pagination mb-0">
+                                    {% if books.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                               href="?{{ current_query }}&page={{ books.previous_page_number }}">
+                                                <i class="fa fa-angle-left"></i> 上一页
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="fa fa-angle-left"></i> 上一页</span>
+                                        </li>
+                                    {% endif %}
+
+                                    <!-- 集成输入跳转的页码显示 -->
+                                    <li class="page-item page-jump-item">
+                                        <div class="page-link page-info-container" id="pageInfoContainer">
+                                            <span class="page-display" id="pageDisplay">
+                                                第 {{ books.number }} / {{ books.paginator.num_pages }} 页
+                                                <small class="jump-hint">（点击跳转）</small>
+                                            </span>
+                                            <form class="page-jump-form d-none" method="get" id="pageJumpForm">
+                                                <!-- 保持当前的搜索参数 -->
+                                                {% for key, value in request.GET.items %}
+                                                    {% if key != 'page' %}
+                                                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <div class="jump-controls">
+                                                    <!-- 上一页按钮 -->
+                                                    {% if books.has_previous %}
+                                                        <a href="?{{ current_query }}&page={{ books.previous_page_number }}" 
+                                                           class="btn btn-sm jump-nav-btn prev-btn">
+                                                            <i class="fa fa-chevron-left"></i>
+                                                        </a>
+                                                    {% else %}
+                                                        <button class="btn btn-sm jump-nav-btn prev-btn disabled" disabled>
+                                                            <i class="fa fa-chevron-left"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    
+                                                    <!-- 页码输入 -->
+                                                    <div class="input-group input-group-sm jump-input-group">
+                                                        <input type="number" 
+                                                               class="form-control page-jump-input" 
+                                                               name="page" 
+                                                               id="pageInput"
+                                                               min="1" 
+                                                               max="{{ books.paginator.num_pages }}" 
+                                                               value="{{ books.number }}"
+                                                               placeholder="页码">
+                                                    </div>
+                                                    
+                                                    <!-- 下一页按钮 -->
+                                                    {% if books.has_next %}
+                                                        <a href="?{{ current_query }}&page={{ books.next_page_number }}" 
+                                                           class="btn btn-sm jump-nav-btn next-btn">
+                                                            <i class="fa fa-chevron-right"></i>
+                                                        </a>
+                                                    {% else %}
+                                                        <button class="btn btn-sm jump-nav-btn next-btn disabled" disabled>
+                                                            <i class="fa fa-chevron-right"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    
+                                                    <!-- 取消按钮 -->
+                                                    <button class="btn btn-sm jump-cancel-btn" type="button">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </li>
+
+                                    
+                                </ul>
+                            </div>
+                        </nav>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        // 自动聚焦搜索框
+        document.addEventListener('DOMContentLoaded', function () {
+            const keywordInput = document.getElementById('id_keyword');
+            if (keywordInput) {
+                keywordInput.focus();
+                // 添加输入框提示
+                keywordInput.placeholder = "输入书名、作者、ISBN或主题词...";
+            }
+
+            // 集成页码跳转功能
+            const pageInfoContainer = document.getElementById('pageInfoContainer');
+            const pageDisplay = document.getElementById('pageDisplay');
+            const pageJumpForm = document.getElementById('pageJumpForm');
+            const pageInput = document.getElementById('pageInput');
+            
+            if (pageInfoContainer && pageDisplay && pageJumpForm && pageInput) {
+                // 点击页码信息切换到编辑模式
+                pageDisplay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showJumpForm();
+                });
+
+                // 显示跳转表单
+                function showJumpForm() {
+                    pageDisplay.classList.add('d-none');
+                    pageJumpForm.classList.remove('d-none');
+                    pageInput.focus();
+                    pageInput.select();
+                }
+
+                // 隐藏跳转表单
+                function hideJumpForm() {
+                    pageDisplay.classList.remove('d-none');
+                    pageJumpForm.classList.add('d-none');
+                }
+
+                // 取消按钮事件
+                const cancelBtn = pageJumpForm.querySelector('.jump-cancel-btn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        hideJumpForm();
+                    });
+                }
+
+                // 表单提交验证
+                pageJumpForm.addEventListener('submit', function(e) {
+                    const pageValue = parseInt(pageInput.value);
+                    const maxPages = parseInt(pageInput.getAttribute('max'));
+                    const minPages = parseInt(pageInput.getAttribute('min'));
+                    
+                    if (!pageValue || pageValue < minPages || pageValue > maxPages) {
+                        e.preventDefault();
+                        alert(`请输入有效的页码（${minPages}-${maxPages}）`);
+                        pageInput.focus();
+                        return false;
+                    }
+                });
+
+                // 回车键提交表单
+                pageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        pageJumpForm.submit();
+                    }
+                });
+
+                // ESC键取消编辑
+                pageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        hideJumpForm();
+                    }
+                });
+
+                // 输入验证
+                pageInput.addEventListener('input', function(e) {
+                    const value = parseInt(e.target.value);
+                    const max = parseInt(e.target.getAttribute('max'));
+                    const min = parseInt(e.target.getAttribute('min'));
+                    
+                    if (value > max) {
+                        e.target.value = max;
+                    } else if (value < min && e.target.value !== '') {
+                        e.target.value = min;
+                    }
+                });
+
+                // 失去焦点时隐藏表单（延迟执行以允许按钮点击）
+                pageInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        if (document.activeElement !== pageJumpForm.querySelector('.jump-cancel-btn')) {
+                            hideJumpForm();
+                        }
+                    }, 150);
+                });
+
+                // 添加页码显示的悬停效果
+                pageDisplay.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.transition = 'all 0.3s ease';
+                });
+
+                pageDisplay.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            }
+        });
+    </script>
+{% endblock %}
